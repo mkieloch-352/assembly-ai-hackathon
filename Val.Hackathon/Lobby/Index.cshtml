@@ -1,0 +1,189 @@
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@using Val.Hackathon.Lobby
+
+@model LobbyModel
+
+@{
+    Layout = "_Layout";
+}
+
+<style type="text/css">
+    body {
+        height: 100vh;
+        margin: 0;
+    }
+
+    main {
+        padding: 0;
+    }
+
+    .video-container {
+        height: 100%;
+        align-items: center;
+    }
+
+    .header {
+        text-align: center;
+    }
+
+    .join {
+        margin-top: 8px;
+    }
+</style>
+
+<div class="row video-container">
+    <div class="col-lg-8">
+        <video id="local-video" autoplay style="max-width: 100%"></video>
+    </div>
+    <div class="col-lg-4">
+        <div class="header">
+            <h3>
+                @Model.DisplayName
+            </h3>
+            <h5>
+                @DateTime.Now.ToLocalTime().ToLongDateString()
+            </h5>
+        </div>
+
+        <form asp-controller="Lobby" asp-action="Join" method="post" id="join-form">
+            <input id="room" asp-for="Room" />
+            
+            <div class="form-group">
+                <label asp-for="DisplayName"></label>
+                <input id="display-name" asp-for="DisplayName" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label asp-for="VideoInputId"></label>
+                <select id="video-input" asp-for="VideoInputId" class="form-control" style="width: 100%; max-width: 100%"></select>
+            </div>
+            <div class="form-group" id="audio-input-container">
+                <label asp-for="AudioInputId"></label>
+                <select id="audio-input" asp-for="AudioInputId" class="form-control" style="max-width: 100%"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="AudioOutputId"></label>
+                <select id="audio-output" asp-for="AudioOutputId" class="form-control" style="max-width: 100%"></select>
+            </div>
+
+            <div class="form-group join">
+                <button class="btn btn-primary form-control" type="button" id="join">Join Call</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="text/javascript" src="~/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript" src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+
+<script type="text/javascript">
+    var selectedAudio;
+    var selectedVideo = {
+        frameRate: {
+            min: 15,
+            ideal: 30,
+            max: 60
+        },
+        width: {
+            min: 720,
+            ideal: 1280,
+            max: 1920
+        },
+        height: {
+            min: 480,
+            ideal: 720,
+            max: 1080
+        }
+    }
+
+    $(document).ready(function () {
+        initializeMedia();
+        initializeDevices();
+
+        $('#video-input').change(function () {
+            var id = this.value;
+            selectedVideo.deviceId = id;
+            initializeMedia()
+        });
+
+        $('#audio-input').change(function () {
+            var id = this.value;
+        });
+
+        $('#audio-output').change(function () {
+            var id = this.value;
+
+            selectedAudio = {
+                deviceId: id
+            };
+
+            initializeMedia();
+        });
+
+        $('#join').click(function () {
+            localStorage.setItem('room', $('#room').val());
+            localStorage.setItem('displayName', $('#display-name').val());
+            localStorage.setItem('videoInput', $('#video-input').val());
+            localStorage.setItem('audioInput', $('#audio-input').val());
+            localStorage.setItem('audioOutput', $('#audio-output').val());
+            $('#join-form').submit();
+        });
+    });
+
+    function initializeMedia() {
+        var audio;
+        var video;
+
+        if (!selectedAudio) {
+            audio = true;
+        } else {
+            audio = selectedAudio;
+        }
+
+        if (!selectedVideo) {
+            video = true;
+        } else {
+            video = selectedVideo;
+        }
+
+        navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: true
+        }).then(function (permissionStream) {
+            navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: true
+            }).then(function (stream) {
+                $('#local-video')[0].srcObject = stream;
+            }).catch((err) => {
+                alert('Unable to start camera or microphone. Make sure your device is plugged in and working');
+                console.error(err);
+            });
+        }).catch((err) => {
+            alert('Please allow permissions to your camera and microphone');
+            console.error(err);
+        });
+    }
+
+    function initializeDevices() {
+        navigator.mediaDevices.enumerateDevices()
+            .then(function (devices) {
+                devices.forEach(function (device) {
+                    var id = '';
+
+                    if (device.kind === 'videoinput') {
+                        id = 'video-input';
+                    } else if (device.kind === 'audioinput') {
+                        id = 'audio-input';
+                    } else if (device.kind === 'audiooutput') {
+                        id = 'audio-output';
+                    }
+
+                    $(`#${id}`).append($('<option/>').val(device.deviceId).html(device.label));
+                });
+            })
+            .catch(function (err) {
+                console.log(err.name + ": " + err.message);
+            });
+    }
+</script>
