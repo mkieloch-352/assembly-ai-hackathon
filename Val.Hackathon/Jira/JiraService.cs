@@ -39,6 +39,20 @@ namespace Val.Hackathon.Jira
             return issue;
         }
 
+        public static async Task<JiraIssueResponse> GetAsync(string key)
+        {
+            key = $"AH-{key}";
+            var client = new HttpClient();
+            string url = $"{BaseUrl}{IssueEndpoint}/{key}";
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", GetBasicAuth());
+
+            var response = await client.GetAsync(url);
+            string json = await response.Content.ReadAsStringAsync();
+            var issue = JsonSerializer.Deserialize<JiraIssueResponse>(json);
+            issue.Url = $"{BaseUrl}/browse/{issue.Key}";
+            return issue;
+        }
+
         private static string GetBasicAuth()
         {
             string auth = $"{User}:{Token}";

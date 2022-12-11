@@ -25,6 +25,27 @@
     </div>
 </div>
 
+<div class="modal fade" id="ticket-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="ticket-title">Modal title</h5>
+            <span class="material-icons" data-dismiss="toast" style="cursor: pointer" onclick="$('#ticket-modal').modal('hide')">close</span>
+      </div>
+      <div class="modal-body">
+          <span>Description</span>
+        <p id="ticket-description">
+
+        </p>
+        <a href="#" id="ticket-url" target="_blank">View Ticket</a>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" onclick="$('#ticket-modal').modal('hide')">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="row flex-column" style="height: calc(100% - 56px)">
     <div id="video-container" v-bind:class="videoSize">
         <div style="height: 50%">
@@ -388,9 +409,10 @@
         var ticketRegex = /(create).*(ticket).*(jira|asana)(\stitled)(.*)/i;
         var emailRegex = /(send).*(email)\s(to)\s([a-zA-Z]+)\ssaying(.*)/i;
         var noteRegex = /(make a note)\s(to|for|with|saying|titled)(.*)/i;
+        var getTicketRegex = /((?:pull up|retrieve|get) ticket (?:number|#))\s(\d+)(\s(?:in|from))\s(jira|asana)/i;
         var muteAudioRegex = /mute my audio/i;
         var muteVideoRegex = /mute my video/i;
-        var text = response.text;
+        var text = replaceDigits(response.text);
 
         if (ticketRegex.test(text)) {
             var match = text.match(ticketRegex);
@@ -509,6 +531,30 @@
                 transcript.actions.push(action);
                 transcript.notes.push(note);
             }
+        } else if (getTicketRegex.test(text)) {
+            var match = text.match(getTicketRegex);
+            var ticketNumber = '';
+            var platform = '';
+
+            if (match.length == 5) {
+                ticketNumber = match[2];
+                platform = match[4];
+            }
+
+            var url = `/api/task/${platform}/ticket/${ticketNumber}`;
+
+            $.get(url).then((response) => {
+                var title = response.title;
+                var description = response.description;
+                var url = response.url;
+
+                $('#ticket-title').text(title);
+                $('#ticket-description').text(description);
+                $('#ticket-url').attr('href', url);
+                $('#ticket-modal').modal('show');
+            }).fail((response) => {
+                console.error(response);
+            })
         }
 
         /*
@@ -776,5 +822,19 @@
         }).fail((error) => {
             console.error(error);
         });
+    }
+
+    function replaceDigits(text) {
+        text = text.toLowerCase().replace('one', 1);
+        text = text.toLowerCase().replace('two', 2);
+        text = text.toLowerCase().replace('three', 3);
+        text = text.toLowerCase().replace('four', 4);
+        text = text.toLowerCase().replace('five', 5);
+        text = text.toLowerCase().replace('six', 6);
+        text = text.toLowerCase().replace('seven', 7);
+        text = text.toLowerCase().replace('eight', 8);
+        text = text.toLowerCase().replace('nine', 9);
+        text = text.toLowerCase().replace('ten', 10);
+        return text;
     }
 </script>

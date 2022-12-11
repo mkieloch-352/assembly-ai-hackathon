@@ -77,5 +77,30 @@ namespace Val.Hackathon.Tasks
         {
             return File(Encoding.UTF8.GetBytes(Transcript), System.Net.Mime.MediaTypeNames.Application.Octet, "transcript.json");
         }
+
+        [HttpGet]
+        [Route("{platform}/ticket/{ticketNumber}")]
+        public async Task<IActionResult> GetTicketAsync(string platform, string ticketNumber)
+        {
+            TicketResponse response = new TicketResponse();
+
+            if (platform.ToLower() == "jira")
+            {
+                var issue = await JiraService.GetAsync(ticketNumber);
+
+                if (issue == null)
+                {
+                    return NotFound();
+                }
+
+                response.Id = issue.Id;
+                response.Key = issue.Key;
+                response.Url = issue.Url;
+                response.Title = issue.Summary;
+                response.Description = issue.Description;
+            }
+
+            return Ok(response);
+        }
     }
 }

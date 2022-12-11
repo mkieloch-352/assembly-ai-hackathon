@@ -285,3 +285,7 @@
 .toast {
     color: black !important;
 }
+
+.modal-title, .modal-body {
+    color: black !important;
+}
