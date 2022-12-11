@@ -441,7 +441,7 @@
                 sendMessage(message);
 
                 var action = {
-                    type: 'Ticket',
+                    type: 'CreateTicket',
                     timestamp: new Date().toISOString(),
                     command: match[0],
                     result: response.message,
@@ -489,7 +489,7 @@
                 sendMessage(response.message);
 
                 var action = {
-                    type: 'Email',
+                    type: 'SendEmail',
                     timestamp: new Date().toISOString(),
                     command: match[0],
                     result: response.message,
@@ -504,8 +504,26 @@
             });
         } else if (muteAudioRegex.test(text)) {
             videoControlsModel.muteAudio();
+
+            var action = {
+                type: 'MuteAudio',
+                timestamp: new Date().toISOString(),
+                command: match[0],
+                result: 'Success'
+            };
+
+            transcript.actions.push(action);
         } else if (muteVideoRegex.test(text)) {
             videoControlsModel.muteVideo();
+
+            var action = {
+                type: 'MuteVideo',
+                timestamp: new Date().toISOString(),
+                command: match[0],
+                result: 'Success'
+            };
+
+            transcript.actions.push(action);
         } else if (noteRegex.test(text)) {
             var match = text.match(noteRegex);
             var note = '';
@@ -519,7 +537,7 @@
                 $('#notes-list').append(item);
 
                 var action = {
-                    type: 'Note',
+                    type: 'AddNote',
                     timestamp: new Date().toISOString(),
                     command: match[0],
                     result: 'Success',
@@ -552,6 +570,24 @@
                 $('#ticket-description').text(description);
                 $('#ticket-url').attr('href', url);
                 $('#ticket-modal').modal('show');
+
+                var action = {
+                    type: 'RetrieveTicket',
+                    timestamp: new Date().toISOString(),
+                    command: match[0],
+                    result: response.message,
+                    metadata: {
+                        platform: platform,
+                        ticketNumber: ticketNumber,
+                        title: response.title,
+                        id: response.id,
+                        key: response.key,
+                        url: response.url,
+                        status: response.status,
+                    }
+                };
+
+                transcript.actions.push(action);
             }).fail((response) => {
                 console.error(response);
             })
