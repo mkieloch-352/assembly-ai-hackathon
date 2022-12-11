@@ -409,9 +409,9 @@
         }
         console.log(`Transcribed Text: ${response.text}`);
 
-        var ticketRegex = /(create).*(ticket).*(jira|asana)(\s(?:titled|called))(.*)/i;
+        var ticketRegex = /(create).*(ticket).*(jira|asana)(\s(?:titled|called|named))(.*)/i;
         var emailRegex = /(send).*(email)\s(to)\s([a-zA-Z]+)\ssaying(.*)/i;
-        var noteRegex = /(make a note)\s(to|for|with|saying|titled)(.*)/i;
+        var noteRegex = /(make a note)\s(to|for|with|saying|titled|named)(.*)/i;
         var getTicketRegex = /((?:pull up|retrieve|get) ticket (?:number|#))\s(\d+)(\s(?:in|from))\s(jira|asana)/i;
         var muteAudioRegex = /mute my audio/i;
         var muteVideoRegex = /mute my video/i;
