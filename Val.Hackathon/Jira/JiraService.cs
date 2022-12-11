@@ -6,7 +6,7 @@ namespace Val.Hackathon.Jira
 {
     public class JiraService
     {
-        private const string Token = "l0IPe4pgvwa1dIZeA09ACBAE";
+        private const string Token = "qAKtO5n0gp15LMlNEHxZ75DC";
         private const string User = "mkieloch352@gmail.com";
         private const string BaseUrl = "https://kieloch.atlassian.net";
 
