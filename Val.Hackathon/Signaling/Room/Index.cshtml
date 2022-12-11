@@ -155,17 +155,19 @@
             socket.onmessage = (message) => {
                 let msg = '';
                 const res = JSON.parse(message.data);
-                console.log(res);
+                //console.log(res);
                 texts[res.audio_start] = res.text;
                 const keys = Object.keys(texts);
                 keys.sort((a, b) => a - b);
+
                 for (const key of keys) {
                     if (texts[key]) {
                         msg += ` ${texts[key]}`;
                     }
                 }
 
-                console.log(msg);
+
+                processAudioText(res);
             };
 
             socket.onerror = (event) => {
@@ -348,6 +350,77 @@
         });
     });
 
+    function processAudioText(response) {
+        if (response.message_type != 'FinalTranscript') {
+            console.log('Waiting on final transcript');
+            return;
+        }
+
+        console.log(`Transcribed Text: ${response.text}`);
+
+        var ticketRegex = /(create).*(ticket).*(jira|asana).*/i;
+        var emailRegex = /(send).*(email)\s(to)\s([a-zA-Z]+)\ssaying(.*)/i;
+        var muteAudioRegex = /mute my audio/i;
+        var muteVideoRegex = /mute my video/i;
+        var text = response.text;
+
+        if (ticketRegex.test(text)) {
+            var match = text.match(ticketRegex);
+            var target = '';
+
+            if (match.length == 4) {
+                target = match[3];
+            }
+
+            console.log(`Creating ticket in ${target}`);
+        } else if (emailRegex.test(text)) {
+            var match = text.match(emailRegex);
+            var destination = '';
+            var message = '';
+
+            if (match.length > 4) {
+                destination = match[4];
+            }
+
+            if (match.length > 5) {
+                message = match[5];
+            }
+
+            console.log(`Sending email to ${destination} with message ${message}`);
+        } else if (muteAudioRegex.test(text)) {
+            videoControlsModel.muteAudio();
+        } else if (muteVideoRegex.test(text)) {
+            videoControlsModel.muteVideo();
+        }
+
+        /*
+        {
+            "audio_start": 17250,
+            "audio_end": 19040,
+            "confidence": 0.8432445339083869,
+            "text": "Hello, friend.",
+            "words": [
+                {
+                    "confidence": 0.7167570112069666,
+                    "text": "Hello,",
+                    "start": 17520,
+                    "end": 17555
+                },
+                {
+                    "confidence": 0.9697320566098074,
+                    "text": "friend.",
+                    "start": 18000,
+                    "end": 18035
+                }
+            ],
+            "created": "2022-12-10T05:26:43.256730",
+            "message_type": "FinalTranscript",
+            "punctuated": true,
+            "text_formatted": true
+            }
+        */
+    }
+
     function sendMessage() {
         var message = $('#new-message').val();
 
@@ -489,7 +562,7 @@
 
         navigator.mediaDevices.getUserMedia({
             audio: true,
-            video: false
+            video: true
         }).then(function (stream) {
             //$('#local-video')[0].srcObject = stream;
             $('#local-video')[0].volume = 0;
