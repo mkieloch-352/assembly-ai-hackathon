@@ -19,7 +19,7 @@ namespace Val.Hackathon.Signaling.Room
         [Route("room/{room}", Name = "Room")]
         public async Task<IActionResult> Index(string room)
         {
-            var model = new RoomModel() { DisplayName = $"Room {room}", Room = room };
+            var model = new RoomModel() { DisplayName = $"User", Room = room };
             return View(model);
         }
 

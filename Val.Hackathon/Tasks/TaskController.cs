@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Net.Mail;
+using System.Text;
 using Val.Hackathon.Asana;
 using Val.Hackathon.Jira;
 
@@ -12,6 +13,8 @@ namespace Val.Hackathon.Tasks
     [ApiController]
     public class TaskController : ControllerBase
     {
+        private static string Transcript = "";
+
         [HttpPost]
         [Route("{platform}")]
         public async Task<IActionResult> CreateTaskAsync(string platform, [FromBody] TaskRequest request)
@@ -58,6 +61,21 @@ namespace Val.Hackathon.Tasks
             };
 
             return Ok(taskResponse);
+        }
+
+        [HttpPost]
+        [Route("export")]
+        public async Task<IActionResult> ExportTranscriptAsync([FromBody] TranscriptRequest request)
+        {
+            Transcript = request.Data;
+            return Ok();
+        }
+
+        [HttpGet]
+        [Route("export")]
+        public async Task<IActionResult> DownloadExportTranscriptAsync()
+        {
+            return File(Encoding.UTF8.GetBytes(Transcript), System.Net.Mime.MediaTypeNames.Application.Octet, "transcript.json");
         }
     }
 }

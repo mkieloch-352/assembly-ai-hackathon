@@ -19,24 +19,14 @@
 }
 
 #main-video-container {
-    /*display: grid;
-    column-gap: 4px;
-    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-    grid-template-rows: repeat(3, 300px);
-    row-gap: 4px;*/
     display: flex;
     flex-direction: row;
-    height: 75%;
-    /*justify-content: center;*/
+    height: 100%;
 }
 
 .video-grid {
-    /*height: 50%;*/
     display: flex;
     margin-bottom: 12px;
-    /*column-gap: 8px;
-    grid-template-columns: repeat(3, minmax(200px, 1fr));
-    grid-template-rows: repeat(2, minmax(200px, 1fr));*/
 }
 
 .video-grid video {
@@ -54,7 +44,7 @@
     position: relative;
     overflow: hidden;
     border-radius: 16px;
-    height: fit-content;
+    height: 100%;
 }
 
     .video-thumbnail video {
@@ -277,4 +267,21 @@
 
 .remote-message {
     padding-right: 1rem;
+}
+
+#transcript-header {
+    cursor: pointer;
+}
+
+#transcript-header:hover {
+    text-decoration: underline;
+}
+
+#transcript {
+    max-height: 150px;
+    overflow: scroll;
+}
+
+.toast {
+    color: black !important;
 }

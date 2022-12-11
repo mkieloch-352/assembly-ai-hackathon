@@ -35,6 +35,7 @@ namespace Val.Hackathon.Jira
             var response = await client.PostAsJsonAsync(url, request);
             string json = await response.Content.ReadAsStringAsync();
             var issue = JsonSerializer.Deserialize<JiraCreateIssueResponse>(json);
+            issue.Url = $"{BaseUrl}/browse/{issue.Key}";
             return issue;
         }
 
