@@ -1,21 +1,19 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
+using Val.Hackathon.Messaging;
 
 namespace Val.Hackathon.Signaling.Room
 {
     public class RoomController : Controller
     {
         private readonly IHubContext<RoomHub> _hub;
+        private readonly IMessageProcessor _messageProcessor;
 
-        public RoomController(IHubContext<RoomHub> hub) 
+        public RoomController(IHubContext<RoomHub> hub, IMessageProcessor messageProcessor) 
         {
             _hub = hub;
+            _messageProcessor = messageProcessor;
         }
 
         [Route("room/{room}", Name = "Room")]
@@ -29,7 +27,7 @@ namespace Val.Hackathon.Signaling.Room
         [Route("room/{room}/chat", Name = "RoomChat")]
         public async Task<IActionResult> Chat([FromBody] MessageModel model)
         {
-            //await _messageProcessor.Process(_hub, _sessionService, model);
+            await _messageProcessor.Process(_hub, model);
             return Ok();
         }
 
@@ -37,7 +35,6 @@ namespace Val.Hackathon.Signaling.Room
         [Route("room/{room}/messages/{userId}", Name = "RoomMessages")]
         public async Task<IActionResult> GetMessages(string room, string userId)
         {
-            //List<MessageModel> messages = await _messageRepository.GetAllAsync(room, userId);
             return Ok();
         }
         
@@ -52,7 +49,6 @@ namespace Val.Hackathon.Signaling.Room
         [Route("room/{room}/leave", Name = "LeaveRoom")]
         public async Task<IActionResult> LeaveRoomAsync([FromBody] LeaveRoomModel model)
         {
-            //await _sessionService.LeaveAsync(model);
             return Ok();
         }
     }

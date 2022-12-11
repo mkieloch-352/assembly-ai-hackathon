@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc.Razor;
+using Val.Hackathon.Messaging;
 using Val.Hackathon.Signaling.Room;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +24,8 @@ builder.Services.Configure<RazorViewEngineOptions>(razor =>
 });
 
 builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
+
+builder.Services.AddSingleton<IMessageProcessor, MessageProcessor>();
 
 var app = builder.Build();
 

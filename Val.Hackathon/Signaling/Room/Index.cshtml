@@ -65,7 +65,7 @@
                     <div>
                         <span class="username">{{message.type == 'local' ? 'You' : message.from}}</span>
                         <span class="date">{{new Date(message.timestamp).toLocaleTimeString()}}:</span>
-                        <span class="message">{{message.text}}</span>
+                        <span class="message" v-html="message.text"></span>
                     </div>
                 </div>
             </div>
@@ -99,7 +99,7 @@
 </div>
 
 <script type="text/javascript" src="~/lib/jquery/dist/jquery.min.js"></script>
-<script type="text/javascript" src="~/lib/uuid/uuid.min.js"></script>
+<script type="text/javascript" src="~/lib/uuid/dist/umd/uuid.min.js"></script>
 <script type="text/javascript" src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
 <script src="~/js/room/video.js" asp-append-version="true"></script>
 <script type="text/javascript" src="~/js/room/chat.js"></script>
@@ -152,7 +152,7 @@
 
             // handle incoming messages to display transcription to the DOM
             const texts = {};
-            socket.onmessage = (message) => {
+            socket.onmessage = async (message) => {
                 let msg = '';
                 const res = JSON.parse(message.data);
                 //console.log(res);
@@ -167,7 +167,7 @@
                 }
 
 
-                processAudioText(res);
+                Promise.resolve(processAudioText(res));
             };
 
             socket.onerror = (event) => {
@@ -225,10 +225,6 @@
 
         connection.on("NewMessage", function (model) {
             sidePanel.addMessage(model);
-            /*console.log(`New Message: ${JSON.stringify(model)}`);
-            var div = $('<div>');
-            div.text(`${model.from} - ${new Date(model.timestamp).toLocaleTimeString()}: ${model.message}`);
-            $('#chat-conversation').append(div);*/
         });
 
         connection.on("UserJoining", function (model) {
@@ -350,7 +346,7 @@
         });
     });
 
-    function processAudioText(response) {
+    async function processAudioText(response) {
         if (response.message_type != 'FinalTranscript') {
             console.log('Waiting on final transcript');
             return;
@@ -358,7 +354,7 @@
 
         console.log(`Transcribed Text: ${response.text}`);
 
-        var ticketRegex = /(create).*(ticket).*(jira|asana).*/i;
+        var ticketRegex = /(create).*(ticket).*(jira|asana)(\stitled)(.*)/i;
         var emailRegex = /(send).*(email)\s(to)\s([a-zA-Z]+)\ssaying(.*)/i;
         var muteAudioRegex = /mute my audio/i;
         var muteVideoRegex = /mute my video/i;
@@ -367,10 +363,31 @@
         if (ticketRegex.test(text)) {
             var match = text.match(ticketRegex);
             var target = '';
+            var title = '';
 
-            if (match.length == 4) {
+            if (match.length > 3) {
                 target = match[3];
             }
+
+            if (match.length > 5) {
+                title = match[5];
+            }
+
+            var model = {
+                "title": title
+            };
+
+            $.post({
+                url: `/api/task/${target}`,
+                contentType: 'application/json',
+                data: JSON.stringify(model)
+            }).then((response) => {
+                console.log(response.message);
+                var message = `${response.message}: <a href="${response.url}" target="_blank">${response.key}</a>`;
+                sendMessage(message);
+            }).fail((error) => {
+                console.log(error);
+            });
 
             console.log(`Creating ticket in ${target}`);
         } else if (emailRegex.test(text)) {
@@ -387,6 +404,22 @@
             }
 
             console.log(`Sending email to ${destination} with message ${message}`);
+
+            var model = {
+                name: destination,
+                title: message
+            };
+
+            $.post({
+                url: `/api/task/email`,
+                contentType: 'application/json',
+                data: JSON.stringify(model)
+            }).then((response) => {
+                console.log(response.message);
+                sendMessage(response.message);
+            }).fail((error) => {
+                console.log(error);
+            });
         } else if (muteAudioRegex.test(text)) {
             videoControlsModel.muteAudio();
         } else if (muteVideoRegex.test(text)) {
@@ -421,8 +454,12 @@
         */
     }
 
-    function sendMessage() {
+    function sendMessage(newMessage) {
         var message = $('#new-message').val();
+
+        if (newMessage) {
+            message = newMessage;
+        }
 
         if (!message || message == '') {
             return;
@@ -449,15 +486,6 @@
         }).fail((error) => {
             console.log(error);
         });
-
-        /*connection.invoke("SendMessage", model).then(function () {
-            var div = $('<div>');
-            div.text(`${model.from} - ${new Date(model.timestamp).toLocaleTimeString()}: ${model.message}`);
-            $('#chat-conversation').append(div);
-            $('#new-message').val('');
-        }).catch (function (err) {
-            return console.error(err.toString());
-        });*/
     }
 
     function addScreenShareStream(stream) {

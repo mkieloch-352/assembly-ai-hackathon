@@ -2,12 +2,12 @@
 
 namespace Val.Hackathon.Asana
 {
-    public class AsanaRequest<T> where T : class
+    public class AsanaObject<T> where T : class
     {
         [JsonPropertyName("data")]
         public T Data { get; set; }
 
-        public AsanaRequest(T data)
+        public AsanaObject(T data)
         {
             Data = data;
         }
